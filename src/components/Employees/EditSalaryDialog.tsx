@@ -6,9 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useForm } from 'react-hook-form';
-import { supabase } from '@/integrations/supabase/client';
+import { mockSupabase } from '@/services/mockSupabase';
 import { toast } from 'sonner';
-import { useQueryClient } from '@tanstack/react-query';
 
 interface EditSalaryDialogProps {
   employee: any;
@@ -17,7 +16,6 @@ interface EditSalaryDialogProps {
 }
 
 export const EditSalaryDialog = ({ employee, open, onOpenChange }: EditSalaryDialogProps) => {
-  const queryClient = useQueryClient();
   const { register, handleSubmit, reset } = useForm({
     defaultValues: {
       monthly_salary: employee?.monthly_salary || 0,
@@ -43,7 +41,7 @@ export const EditSalaryDialog = ({ employee, open, onOpenChange }: EditSalaryDia
   const onSubmit = async (data: any) => {
     if (!employee) return;
 
-    const { error } = await supabase
+    const { error } = await mockSupabase
       .from('employees')
       .update({
         monthly_salary: parseFloat(data.monthly_salary),
@@ -60,8 +58,6 @@ export const EditSalaryDialog = ({ employee, open, onOpenChange }: EditSalaryDia
     }
 
     toast.success('Salary details updated successfully');
-    queryClient.invalidateQueries({ queryKey: ['employees'] });
-    queryClient.invalidateQueries({ queryKey: ['employees-stats'] });
     onOpenChange(false);
   };
 

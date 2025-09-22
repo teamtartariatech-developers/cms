@@ -7,10 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useForm } from 'react-hook-form';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
-import { useQueryClient } from '@tanstack/react-query';
+import { mockSupabase } from '@/services/mockSupabase';
+import { useMockAuth } from '@/hooks/useMockAuth';
+import { toast } from 'sonner';
 
 interface AddClientDialogProps {
   open: boolean;
@@ -18,9 +17,7 @@ interface AddClientDialogProps {
 }
 
 export const AddClientDialog: React.FC<AddClientDialogProps> = ({ open, onOpenChange }) => {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { user } = useMockAuth();
   const { register, handleSubmit, reset, setValue, watch } = useForm();
 
   const paymentType = watch('payment_type');
@@ -29,7 +26,7 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({ open, onOpenCh
     if (!user) return;
 
     try {
-      const { error } = await supabase
+      const { error } = await mockSupabase
         .from('clients')
         .insert({
           name: data.name,
@@ -48,22 +45,13 @@ export const AddClientDialog: React.FC<AddClientDialogProps> = ({ open, onOpenCh
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Client added successfully",
-      });
+      toast.success("Client added successfully");
 
-      queryClient.invalidateQueries({ queryKey: ['clients'] });
-      queryClient.invalidateQueries({ queryKey: ['clients-stats'] });
       reset();
       onOpenChange(false);
     } catch (error) {
       console.error('Error adding client:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add client",
-        variant: "destructive",
-      });
+      toast.error("Failed to add client");
     }
   };
 

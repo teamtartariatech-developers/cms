@@ -4,21 +4,32 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Pencil, Trash2, DollarSign } from 'lucide-react';
-import { useExpenses } from '@/hooks/useExpensesData';
+import { useMockQuery } from '@/hooks/useMockData';
+import { mockSupabase } from '@/services/mockSupabase';
 import { EditExpenseDialog } from './EditExpenseDialog';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useQueryClient } from '@tanstack/react-query';
 
 export const ExpensesList = () => {
-  const { data: expenses, isLoading } = useExpenses();
+  const { data: expenses, isLoading } = useMockQuery(
+    ['expenses'],
+    async () => {
+      const { data, error } = await mockSupabase
+        .from('company_expenses')
+        .select('*')
+        .order('expense_date', { ascending: false })
+        .execute();
+      
+      if (error) throw error;
+      return data || [];
+    },
+    true
+  );
   const [editingExpense, setEditingExpense] = useState<any>(null);
-  const queryClient = useQueryClient();
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this expense?')) return;
 
-    const { error } = await supabase
+    const { error } = await mockSupabase
       .from('company_expenses')
       .delete()
       .eq('id', id);
@@ -29,8 +40,6 @@ export const ExpensesList = () => {
     }
 
     toast.success('Expense deleted successfully');
-    queryClient.invalidateQueries({ queryKey: ['expenses'] });
-    queryClient.invalidateQueries({ queryKey: ['expenses-stats'] });
   };
 
   if (isLoading) {

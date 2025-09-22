@@ -1,13 +1,13 @@
 
 import React, { useCallback } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useMockAuth } from '@/hooks/useMockAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Clock, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 
 const AttendanceCard = React.memo(() => {
-  const { user, checkIn, checkOut } = useAuth();
+  const { user, checkIn, checkOut } = useMockAuth();
 
   const handleCheckIn = useCallback(() => {
     checkIn();

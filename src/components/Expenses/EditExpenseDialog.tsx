@@ -7,9 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useForm } from 'react-hook-form';
-import { supabase } from '@/integrations/supabase/client';
+import { mockSupabase } from '@/services/mockSupabase';
 import { toast } from 'sonner';
-import { useQueryClient } from '@tanstack/react-query';
 
 interface EditExpenseDialogProps {
   expense: any;
@@ -18,7 +17,6 @@ interface EditExpenseDialogProps {
 }
 
 export const EditExpenseDialog = ({ expense, open, onOpenChange }: EditExpenseDialogProps) => {
-  const queryClient = useQueryClient();
   const { register, handleSubmit, reset, setValue } = useForm();
 
   useEffect(() => {
@@ -38,7 +36,7 @@ export const EditExpenseDialog = ({ expense, open, onOpenChange }: EditExpenseDi
   const onSubmit = async (data: any) => {
     if (!expense) return;
 
-    const { error } = await supabase
+    const { error } = await mockSupabase
       .from('company_expenses')
       .update({
         title: data.title,
@@ -56,8 +54,6 @@ export const EditExpenseDialog = ({ expense, open, onOpenChange }: EditExpenseDi
     }
 
     toast.success('Expense updated successfully');
-    queryClient.invalidateQueries({ queryKey: ['expenses'] });
-    queryClient.invalidateQueries({ queryKey: ['expenses-stats'] });
     onOpenChange(false);
   };
 

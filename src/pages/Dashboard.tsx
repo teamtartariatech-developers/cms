@@ -1,6 +1,6 @@
 
 import React, { Suspense } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useMockAuth } from '@/hooks/useMockAuth';
 
 // Lazy load components for better performance
 const StatsCards = React.lazy(() => import('@/components/Dashboard/StatsCards'));
@@ -14,7 +14,7 @@ const LoadingCard = () => (
 );
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user } = useMockAuth();
 
   return (
     <div className="space-y-6">

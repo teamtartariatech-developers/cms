@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useMockAuth } from '@/hooks/useMockAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,14 +9,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MessageSquare, Plus, AlertCircle, Info, CheckCircle } from 'lucide-react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useMockQuery, useMockMutation } from '@/hooks/useMockData';
+import { mockSupabase } from '@/services/mockSupabase';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
 const Announcements = () => {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const { user } = useMockAuth();
   const [showNewAnnouncement, setShowNewAnnouncement] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
@@ -28,26 +27,24 @@ const Announcements = () => {
 
   const canManageAnnouncements = user?.role === 'founder';
 
-  const { data: announcements } = useQuery({
-    queryKey: ['announcements'],
-    queryFn: async () => {
-      const { data, error } = await supabase
+  const { data: announcements } = useMockQuery(
+    ['announcements'],
+    async () => {
+      const { data, error } = await mockSupabase
         .from('announcements')
-        .select(`
-          *,
-          profiles!announcements_created_by_fkey(first_name, last_name)
-        `)
+        .select('*')
         .eq('is_active', true)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .execute();
       
       if (error) throw error;
       return data;
     },
-  });
+    true
+  );
 
-  const createAnnouncement = useMutation({
-    mutationFn: async (data: any) => {
-      const { error } = await supabase
+  const createAnnouncement = useMockMutation(async (data: any) => {
+      const { error } = await mockSupabase
         .from('announcements')
         .insert({
           ...data,
@@ -56,23 +53,7 @@ const Announcements = () => {
         });
       
       if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['announcements'] });
       toast.success('Announcement created successfully');
-      setShowNewAnnouncement(false);
-      setFormData({
-        title: '',
-        content: '',
-        priority: 'medium',
-        department: '',
-        expires_at: ''
-      });
-    },
-    onError: (error) => {
-      toast.error('Failed to create announcement');
-      console.error('Error creating announcement:', error);
-    }
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -82,6 +63,14 @@ const Announcements = () => {
       return;
     }
     createAnnouncement.mutate(formData);
+    setShowNewAnnouncement(false);
+    setFormData({
+      title: '',
+      content: '',
+      priority: 'medium',
+      department: '',
+      expires_at: ''
+    });
   };
 
   const getPriorityIcon = (priority: string) => {

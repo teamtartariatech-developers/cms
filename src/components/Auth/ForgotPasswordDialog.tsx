@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { mockSupabase } from '@/services/mockSupabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,9 +34,7 @@ const ForgotPasswordDialog = ({ children }: ForgotPasswordDialogProps) => {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
+      const { error } = await mockSupabase.auth.resetPasswordForEmail(email.trim());
 
       if (error) {
         toast.error(error.message);

@@ -3,16 +3,29 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Users, DollarSign, AlertCircle } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useMockAuth } from '@/hooks/useMockAuth';
 import { ClientList } from '@/components/Clients/ClientList';
 import { AddClientDialog } from '@/components/Clients/AddClientDialog';
 import { PaymentsList } from '@/components/Clients/PaymentsList';
 import { useClientsData } from '@/hooks/useClientsData';
 
 const ClientManagement = () => {
-  const { user } = useAuth();
+  const { user } = useMockAuth();
   const [showAddClient, setShowAddClient] = useState(false);
-  const { data: clientsStats, isLoading } = useClientsData();
+  const { data: clientsStats, isLoading } = useMockQuery(
+    ['clients-stats', user?.id],
+    async () => {
+      if (!user) return null;
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return {
+        totalClients: 25,
+        activeClients: 20,
+        totalRevenue: 500000,
+        remainingBalance: 150000,
+      };
+    },
+    !!user && (user.role === 'founder' || user.role === 'cofounder')
+  );
 
   // Check if user has access (founder or cofounder only)
   if (!user || (user.role !== 'founder' && user.role !== 'cofounder')) {

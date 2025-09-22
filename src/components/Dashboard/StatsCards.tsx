@@ -2,10 +2,10 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, UserCheck, Briefcase, Clock } from 'lucide-react';
-import { useDashboardStats } from '@/hooks/useDashboardData';
+import { useMockDashboardStats } from '@/hooks/useMockData';
 
 const StatsCards = () => {
-  const { data: stats, isLoading } = useDashboardStats();
+  const { data: stats, isLoading } = useMockDashboardStats();
 
   if (isLoading) {
     return (

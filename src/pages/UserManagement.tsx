@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useMockAuth } from '@/hooks/useMockAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,8 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { UserCheck, Search, Plus, Mail, Phone, Calendar } from 'lucide-react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useMockQuery, useMockMutation } from '@/hooks/useMockData';
+import { mockSupabase } from '@/services/mockSupabase';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { Switch } from '@/components/ui/switch';
@@ -19,17 +19,16 @@ import { useLeadsAccessAdmin } from '@/hooks/useLeadsAccess';
 type UserRole = 'founder' | 'cofounder' | 'manager' | 'employee' | 'hr' | 'intern';
 
 const UserManagement = () => {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const { user } = useMockAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
 
   const hasAccess = ['founder', 'cofounder', 'hr'].includes(user?.role || '');
 
-  const { data: users } = useQuery({
-    queryKey: ['users', searchTerm, roleFilter],
-    queryFn: async () => {
-      let query = supabase
+  const { data: users } = useMockQuery(
+    ['users', searchTerm, roleFilter],
+    async () => {
+      let query = mockSupabase
         .from('profiles')
         .select('*')
         .eq('is_active', true)
@@ -40,55 +39,46 @@ const UserManagement = () => {
       }
 
       if (roleFilter !== 'all') {
-        query = query.eq('role', roleFilter as UserRole);
+        query = query.eq('role', roleFilter);
       }
 
-      const { data, error } = await query;
+      const { data, error } = await query.execute();
       if (error) throw error;
       return data;
     },
-    enabled: hasAccess,
-  });
+    hasAccess
+  );
 
-  const updateUserRole = useMutation({
-    mutationFn: async ({ userId, role }: { userId: string; role: UserRole }) => {
-      const { error } = await supabase
+  const updateUserRole = useMockMutation(async ({ userId, role }: { userId: string; role: UserRole }) => {
+      const { error } = await mockSupabase
         .from('profiles')
         .update({ role })
         .eq('id', userId);
       
       if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
       toast.success('User role updated successfully');
-    },
-    onError: (error) => {
-      toast.error('Failed to update user role');
-      console.error('Error updating user role:', error);
-    }
   });
 
-  const deactivateUser = useMutation({
-    mutationFn: async (userId: string) => {
-      const { error } = await supabase
+  const deactivateUser = useMockMutation(async (userId: string) => {
+      const { error } = await mockSupabase
         .from('profiles')
         .update({ is_active: false })
         .eq('id', userId);
       
       if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
       toast.success('User deactivated successfully');
-    },
-    onError: (error) => {
-      toast.error('Failed to deactivate user');
-      console.error('Error deactivating user:', error);
-    }
   });
 
-  const { isFounder: isFounderUser, grant, revoke, accessSet } = useLeadsAccessAdmin();
+  const grant = useMockMutation(async (targetUserId: string) => {
+    toast.success('Leads access granted');
+  });
+
+  const revoke = useMockMutation(async (targetUserId: string) => {
+    toast.success('Leads access revoked');
+  });
+
+  const accessSet = new Set(['2', '3']); // Mock some users having access
+  const isFounderUser = user?.role === 'founder';
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {

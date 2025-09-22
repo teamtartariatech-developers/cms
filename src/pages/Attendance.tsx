@@ -1,38 +1,39 @@
 
 import React, { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useMockAuth } from '@/hooks/useMockAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Clock, MapPin, Calendar } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useMockQuery } from '@/hooks/useMockData';
+import { mockSupabase } from '@/services/mockSupabase';
 import { format } from 'date-fns';
 import AttendanceTable from '@/components/Attendance/AttendanceTable';
 import HourlyUpdatePopup from '@/components/Timesheets/HourlyUpdatePopup';
 
 const Attendance = () => {
-  const { user, checkIn, checkOut } = useAuth();
+  const { user, checkIn, checkOut } = useMockAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showHourlyPopup, setShowHourlyPopup] = useState(false);
   const [currentHour, setCurrentHour] = useState(new Date().getHours());
 
-  const { data: attendanceRecords, refetch } = useQuery({
-    queryKey: ['attendance', user?.id],
-    queryFn: async () => {
+  const { data: attendanceRecords, refetch } = useMockQuery(
+    ['attendance', user?.id],
+    async () => {
       if (!user?.id) return [];
-      const { data, error } = await supabase
+      const { data, error } = await mockSupabase
         .from('attendance')
         .select('*')
         .eq('user_id', user.id)
         .order('date', { ascending: false })
-        .limit(10);
+        .limit(10)
+        .execute();
       
       if (error) throw error;
       return data;
     },
-    enabled: !!user?.id,
-  });
+    !!user?.id
+  );
 
   const handleCheckIn = async () => {
     setIsLoading(true);

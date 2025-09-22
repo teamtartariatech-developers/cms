@@ -5,9 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Download, Calendar, Users, Clock, TrendingUp } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
+import { useMockAuth } from '@/hooks/useMockAuth';
+import { toast } from 'sonner';
 
 interface AttendanceData {
   date: string;
@@ -23,8 +22,7 @@ interface DepartmentData {
 }
 
 const Reports = () => {
-  const { user } = useAuth();
-  const { toast } = useToast();
+  const { user } = useMockAuth();
   const [selectedPeriod, setSelectedPeriod] = useState('week');
   const [attendanceData, setAttendanceData] = useState<AttendanceData[]>([]);
   const [departmentData, setDepartmentData] = useState<DepartmentData[]>([]);
@@ -43,93 +41,33 @@ const Reports = () => {
 
   const fetchReportsData = async () => {
     try {
-      // Fetch attendance data
-      const daysBack = selectedPeriod === 'week' ? 7 : selectedPeriod === 'month' ? 30 : 90;
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - daysBack);
-
-      const { data: attendance } = await supabase
-        .from('attendance')
-        .select(`
-          date,
-          status,
-          user_id,
-          profiles:user_id!inner (
-            department
-          )
-        `)
-        .gte('date', startDate.toISOString().split('T')[0]);
-
-      // Process attendance data
-      const attendanceByDate: { [key: string]: { present: number; absent: number; late: number } } = {};
-      const departmentHours: { [key: string]: { hours: number; employees: Set<string> } } = {};
-
-      if (attendance) {
-        attendance.forEach((record: any) => {
-          const date = record.date;
-          if (!attendanceByDate[date]) {
-            attendanceByDate[date] = { present: 0, absent: 0, late: 0 };
-          }
-          
-          if (record.status === 'present') {
-            attendanceByDate[date].present++;
-          } else if (record.status === 'absent') {
-            attendanceByDate[date].absent++;
-          } else if (record.status === 'late') {
-            attendanceByDate[date].late++;
-          }
-
-          // Department data
-          if (record.profiles?.department) {
-            const dept = record.profiles.department;
-            if (!departmentHours[dept]) {
-              departmentHours[dept] = { hours: 0, employees: new Set() };
-            }
-            departmentHours[dept].employees.add(record.user_id);
-          }
-        });
-      }
-
-      // Convert to chart data
-      const chartData = Object.entries(attendanceByDate).map(([date, data]) => ({
-        date: new Date(date).toLocaleDateString(),
-        ...data
-      }));
-
-      setAttendanceData(chartData);
-
-      // Process department data
-      const deptData = Object.entries(departmentHours).map(([department, data]) => ({
-        department,
-        hours: Math.round(Math.random() * 40 + 30), // Placeholder calculation
-        employees: data.employees.size
-      }));
-
-      setDepartmentData(deptData);
-
-      // Calculate summary stats
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('is_active', true);
-
-      setTotalEmployees(profiles?.length || 0);
-
-      // Calculate attendance rate
-      const totalPresent = chartData.reduce((sum, day) => sum + day.present, 0);
-      const totalPossible = chartData.length * (profiles?.length || 1);
-      setAttendanceRate(totalPossible > 0 ? Math.round((totalPresent / totalPossible) * 100) : 0);
-
-      // Calculate average hours
-      setAvgHoursPerDay(7.5); // Placeholder
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Mock data for charts
+      const mockAttendanceData = [
+        { date: '1/6', present: 12, absent: 2, late: 1 },
+        { date: '1/7', present: 14, absent: 1, late: 0 },
+        { date: '1/8', present: 13, absent: 1, late: 1 },
+        { date: '1/9', present: 15, absent: 0, late: 0 },
+        { date: '1/10', present: 12, absent: 2, late: 1 },
+      ];
+      
+      const mockDepartmentData = [
+        { department: 'Engineering', hours: 320, employees: 8 },
+        { department: 'Marketing', hours: 160, employees: 4 },
+        { department: 'Sales', hours: 120, employees: 3 },
+      ];
+      
+      setAttendanceData(mockAttendanceData);
+      setDepartmentData(mockDepartmentData);
+      setTotalEmployees(15);
+      setAttendanceRate(85);
+      setAvgHoursPerDay(7.5);
 
     } catch (error) {
       console.error('Error fetching reports data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch reports data.",
-        variant: "destructive",
-      });
+      toast.error("Failed to fetch reports data.");
     } finally {
       setIsLoading(false);
     }
@@ -151,10 +89,7 @@ const Reports = () => {
     a.click();
     window.URL.revokeObjectURL(url);
 
-    toast({
-      title: "Export Complete",
-      description: "Report has been downloaded successfully.",
-    });
+    toast.success("Report has been downloaded successfully.");
   };
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];

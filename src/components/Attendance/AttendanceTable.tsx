@@ -1,48 +1,51 @@
 
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useMockQuery } from '@/hooks/useMockData';
+import { mockSupabase } from '@/services/mockSupabase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
-import { useAuth } from '@/hooks/useAuth';
+import { useMockAuth } from '@/hooks/useMockAuth';
 import { Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const AttendanceTable = () => {
-  const { user } = useAuth();
+  const { user } = useMockAuth();
   const isFounder = user?.role === 'founder';
 
-  const { data: attendanceData, refetch } = useQuery({
-    queryKey: ['all-attendance'],
-    queryFn: async () => {
-      const { data, error } = await supabase
+  const { data: attendanceData, refetch } = useMockQuery(
+    ['all-attendance'],
+    async () => {
+      const { data, error } = await mockSupabase
         .from('attendance')
-        .select(`
-          *,
-          profiles:user_id (
-            first_name,
-            last_name,
-            avatar_url,
-            department,
-            position
-          )
-        `)
+        .select('*')
         .order('date', { ascending: false })
-        .limit(50);
+        .limit(50)
+        .execute();
       
       if (error) throw error;
-      return data;
+      
+      // Add mock profile data
+      return data?.map(record => ({
+        ...record,
+        profiles: {
+          first_name: 'John',
+          last_name: 'Doe',
+          avatar_url: null,
+          department: 'Engineering',
+          position: 'Developer'
+        }
+      })) || [];
     },
-    enabled: isFounder,
-  });
+    isFounder
+  );
 
   const deleteAttendance = async (id: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await mockSupabase
         .from('attendance')
         .delete()
         .eq('id', id);

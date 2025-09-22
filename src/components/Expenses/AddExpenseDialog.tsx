@@ -7,10 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useForm } from 'react-hook-form';
-import { supabase } from '@/integrations/supabase/client';
+import { mockSupabase } from '@/services/mockSupabase';
 import { toast } from 'sonner';
-import { useAuth } from '@/hooks/useAuth';
-import { useQueryClient } from '@tanstack/react-query';
+import { useMockAuth } from '@/hooks/useMockAuth';
 
 interface AddExpenseDialogProps {
   open: boolean;
@@ -18,8 +17,7 @@ interface AddExpenseDialogProps {
 }
 
 export const AddExpenseDialog = ({ open, onOpenChange }: AddExpenseDialogProps) => {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const { user } = useMockAuth();
   const { register, handleSubmit, reset, setValue, watch } = useForm();
 
   const expenseType = watch('expense_type');
@@ -27,7 +25,7 @@ export const AddExpenseDialog = ({ open, onOpenChange }: AddExpenseDialogProps) 
   const onSubmit = async (data: any) => {
     if (!user) return;
 
-    const { error } = await supabase
+    const { error } = await mockSupabase
       .from('company_expenses')
       .insert({
         title: data.title,
@@ -46,8 +44,6 @@ export const AddExpenseDialog = ({ open, onOpenChange }: AddExpenseDialogProps) 
     }
 
     toast.success('Expense added successfully');
-    queryClient.invalidateQueries({ queryKey: ['expenses'] });
-    queryClient.invalidateQueries({ queryKey: ['expenses-stats'] });
     reset();
     onOpenChange(false);
   };

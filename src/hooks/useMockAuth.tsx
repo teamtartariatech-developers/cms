@@ -1,10 +1,7 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { mockSupabase } from '@/services/mockSupabase';
-import { currentUser, setCurrentUser, User as MockUser } from '@/data/mockData';
+import { currentUser, setCurrentUser, User } from '@/data/mockData';
 import { toast } from 'sonner';
-
-interface User extends MockUser {}
 
 interface AuthContextType {
   user: User | null;
@@ -17,12 +14,12 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const MockAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(currentUser);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Set up mock auth state listener
+    // Set up auth state listener
     const { unsubscribe } = mockSupabase.auth.onAuthStateChange((authUser) => {
       setUser(authUser);
       setIsLoading(false);
@@ -39,11 +36,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
+        console.error('Login error:', error);
         return false;
       }
 
       return Boolean(data.user);
     } catch (error) {
+      console.error('Login error:', error);
       return false;
     }
   };
@@ -128,10 +127,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = () => {
+export const useMockAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useMockAuth must be used within a MockAuthProvider');
   }
   return context;
 };

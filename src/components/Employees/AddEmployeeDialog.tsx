@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supabase } from '@/integrations/supabase/client';
+import { mockSupabase } from '@/services/mockSupabase';
 import { toast } from 'sonner';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMockMutation } from '@/hooks/useMockData';
 
 interface AddEmployeeDialogProps {
   open: boolean;
@@ -27,88 +27,30 @@ const AddEmployeeDialog = ({ open, onOpenChange }: AddEmployeeDialogProps) => {
     employee_code: '',
     join_date: new Date().toISOString().split('T')[0]
   });
-  const queryClient = useQueryClient();
 
-  const createEmployee = useMutation({
-    mutationFn: async (data: typeof formData) => {
-      const currentUser = await supabase.auth.getUser();
-      if (!currentUser.data.user) throw new Error('User not authenticated');
+  const createEmployee = useMockMutation(async (data: typeof formData) => {
+      // Simulate employee creation
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Check if email already exists
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('email', data.email)
-        .single();
-
-      if (existingProfile) {
-        throw new Error('An employee with this email already exists');
-      }
-
-      // Check if employee code already exists
-      const { data: existingEmployee } = await supabase
-        .from('employees')
-        .select('employee_code')
-        .eq('employee_code', data.employee_code)
-        .single();
-
-      if (existingEmployee) {
-        throw new Error('An employee with this employee code already exists');
-      }
-      
-      // Generate a UUID for the profile
-      const profileId = crypto.randomUUID();
-      
-      // Create profile entry (without auth user)
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: profileId,
-          email: data.email,
-          first_name: data.first_name,
-          last_name: data.last_name,
-          role: data.role,
-          department: data.department,
-          position: data.position,
-          phone: data.phone,
-          is_active: true
-        })
-        .select()
-        .single();
-
-      if (profileError) {
-        console.error('Profile creation error:', profileError);
-        if (profileError.code === '23505') {
-          throw new Error('An employee with this email already exists');
-        }
-        throw new Error(`Failed to create profile: ${profileError.message}`);
-      }
-
-      // Create employee record
-      const { error: employeeError } = await supabase
+      const { error } = await mockSupabase
         .from('employees')
         .insert({
-          profile_id: profile.id,
+          profile_id: crypto.randomUUID(),
           monthly_salary: parseFloat(data.monthly_salary),
           employee_code: data.employee_code,
           join_date: data.join_date,
-          created_by: currentUser.data.user.id,
-          is_active: true
+          created_by: '1',
+          is_active: true,
+          name: `${data.first_name} ${data.last_name}`,
+          email: data.email,
+          phone: data.phone,
+          role: data.role,
+          department: data.department,
+          position: data.position,
         });
 
-      if (employeeError) {
-        console.error('Employee creation error:', employeeError);
-        if (employeeError.code === '23505') {
-          throw new Error('An employee with this employee code already exists');
-        }
-        throw new Error(`Failed to create employee: ${employeeError.message}`);
-      }
-
-      return profile;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['employees'] });
-      queryClient.invalidateQueries({ queryKey: ['employees-stats'] });
+      if (error) throw error;
+      
       toast.success('Employee added successfully');
       setFormData({
         first_name: '',
@@ -123,11 +65,6 @@ const AddEmployeeDialog = ({ open, onOpenChange }: AddEmployeeDialogProps) => {
         join_date: new Date().toISOString().split('T')[0]
       });
       onOpenChange(false);
-    },
-    onError: (error) => {
-      toast.error(error.message || 'Failed to add employee');
-      console.error('Error adding employee:', error);
-    }
   });
 
   const handleSubmit = (e: React.FormEvent) => {

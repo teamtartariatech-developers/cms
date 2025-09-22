@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { useUserPreferences } from '@/hooks/useUserPreferences';
+import { useMockAuth } from '@/hooks/useMockAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,8 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { User, Bell, Shield, Palette, Download, Key } from 'lucide-react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useMockMutation } from '@/hooks/useMockData';
+import { mockSupabase } from '@/services/mockSupabase';
 import { toast } from 'sonner';
 import PhotoUpload from '@/components/Settings/PhotoUpload';
 import NotificationCenter from '@/components/Notifications/NotificationCenter';
@@ -19,10 +18,15 @@ import TwoFactorAuth from '@/components/Settings/TwoFactorAuth';
 import DataExport from '@/components/Settings/DataExport';
 
 const Settings = () => {
-  const { user } = useAuth();
-  const { preferences, updatePreferences, isLoading: preferencesLoading } = useUserPreferences();
-  const queryClient = useQueryClient();
+  const { user } = useMockAuth();
   const [activeSection, setActiveSection] = useState('profile');
+  const [preferences, setPreferences] = useState({
+    email_notifications: true,
+    push_notifications: true,
+    project_updates: true,
+    attendance_reminders: true,
+    hourly_task_reminders: true,
+  });
   
   const [profileData, setProfileData] = useState({
     first_name: user?.first_name || '',
@@ -33,24 +37,20 @@ const Settings = () => {
     department: user?.department || ''
   });
 
-  const updateProfile = useMutation({
-    mutationFn: async (data: any) => {
-      const { error } = await supabase
+  const updateProfile = useMockMutation(async (data: any) => {
+      const { error } = await mockSupabase
         .from('profiles')
         .update(data)
         .eq('id', user?.id);
       
       if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user'] });
       toast.success('Profile updated successfully');
-    },
-    onError: (error) => {
-      toast.error('Failed to update profile');
-      console.error('Error updating profile:', error);
-    }
   });
+
+  const updatePreferences = async (updates: any) => {
+    setPreferences(prev => ({ ...prev, ...updates }));
+    toast.success('Preferences updated successfully');
+  };
 
   const handleProfileSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -160,14 +160,7 @@ const Settings = () => {
                 <CardDescription>Choose how you want to be notified about updates</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {preferencesLoading ? (
-                  <div className="animate-pulse space-y-4">
-                    <div className="h-12 bg-gray-200 rounded"></div>
-                    <div className="h-12 bg-gray-200 rounded"></div>
-                    <div className="h-12 bg-gray-200 rounded"></div>
-                  </div>
-                ) : (
-                  <>
+                <>
                     <div className="flex items-center justify-between">
                       <div>
                         <Label htmlFor="email_notifications">Email Notifications</Label>
@@ -235,8 +228,7 @@ const Settings = () => {
                         onCheckedChange={(checked) => updatePreferences({ hourly_task_reminders: checked })}
                       />
                     </div>
-                  </>
-                )}
+                </>
               </CardContent>
             </Card>
 

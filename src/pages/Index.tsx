@@ -1,11 +1,11 @@
 
 import React, { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useMockAuth } from '@/hooks/useMockAuth';
 import { Button } from '@/components/ui/button';
 import LoginForm from '@/components/Auth/LoginForm';
 
 const Index = () => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading } = useMockAuth();
   const [showLogin, setShowLogin] = useState(false);
 
   if (isLoading) {

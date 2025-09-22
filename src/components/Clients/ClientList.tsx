@@ -5,13 +5,27 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Eye, DollarSign, Phone, Mail, Pencil } from 'lucide-react';
-import { useClients } from '@/hooks/useClientsData';
+import { useMockQuery } from '@/hooks/useMockData';
+import { mockSupabase } from '@/services/mockSupabase';
 import { ClientDetailsDialog } from './ClientDetailsDialog';
 import { AddPaymentDialog } from './AddPaymentDialog';
 import { EditClientDialog } from './EditClientDialog';
 
 export const ClientList = () => {
-  const { data: clients, isLoading } = useClients();
+  const { data: clients, isLoading } = useMockQuery(
+    ['clients'],
+    async () => {
+      const { data, error } = await mockSupabase
+        .from('clients')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .execute();
+      
+      if (error) throw error;
+      return data || [];
+    },
+    true
+  );
   const [selectedClient, setSelectedClient] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
   const [showAddPayment, setShowAddPayment] = useState(false);

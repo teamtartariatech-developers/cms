@@ -4,8 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 const SignUpForm = () => {
   const [formData, setFormData] = useState({
@@ -18,60 +17,29 @@ const SignUpForm = () => {
     position: '',
   });
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            first_name: formData.firstName,
-            last_name: formData.lastName,
-            role: formData.role,
-            department: formData.department,
-            position: formData.position,
-          },
-        },
+      // Simulate sign up process
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast.success("Account created successfully! You can now sign in.");
+      
+      // Reset form
+      setFormData({
+        email: '',
+        password: '',
+        firstName: '',
+        lastName: '',
+        role: 'employee',
+        department: '',
+        position: '',
       });
-
-      if (error) {
-        toast({
-          title: "Sign Up Failed",
-          description: error.message,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (data.user) {
-        toast({
-          title: "Sign Up Successful",
-          description: "Please check your email for verification instructions.",
-        });
-        
-        // Reset form
-        setFormData({
-          email: '',
-          password: '',
-          firstName: '',
-          lastName: '',
-          role: 'employee',
-          department: '',
-          position: '',
-        });
-      }
     } catch (error) {
-      toast({
-        title: "Sign Up Failed",
-        description: "An unexpected error occurred.",
-        variant: "destructive",
-      });
+      toast.error("Sign up failed. Please try again.");
     } finally {
       setIsLoading(false);
     }

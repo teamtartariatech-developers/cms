@@ -1,7 +1,7 @@
 
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
-import { useAuth } from '@/hooks/useAuth';
+import { useMockAuth } from '@/hooks/useMockAuth';
 import MainLayout from '@/components/Layout/MainLayout';
 import Index from '@/pages/Index';
 import Dashboard from '@/pages/Dashboard';
@@ -20,7 +20,7 @@ import Settings from '@/pages/Settings';
 import NotFound from '@/pages/NotFound';
 
 function App() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading } = useMockAuth();
 
   if (isLoading) {
     return (

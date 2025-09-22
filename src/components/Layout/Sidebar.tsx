@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useMockAuth } from '@/hooks/useMockAuth';
 import { cn } from '@/lib/utils';
 import { useLeadsPermission } from '@/hooks/useLeadsAccess';
 import { 
@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 
 const Sidebar = () => {
-  const { user } = useAuth();
+  const { user } = useMockAuth();
   const { canAccessLeads } = useLeadsPermission();
 
   const navigation = [

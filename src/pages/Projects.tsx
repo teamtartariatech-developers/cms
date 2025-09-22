@@ -4,41 +4,32 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, FolderOpen, Users, Calendar, MoreHorizontal } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useMockAuth } from '@/hooks/useMockAuth';
+import { useMockQuery } from '@/hooks/useMockData';
+import { mockSupabase } from '@/services/mockSupabase';
 import { ProjectStatusBadge } from '@/components/Projects/ProjectStatusBadge';
 import AddProjectDialog from '@/components/Projects/AddProjectDialog';
 
 const Projects = () => {
-  const { user } = useAuth();
+  const { user } = useMockAuth();
   const [showAddProject, setShowAddProject] = useState(false);
   
-  const { data: projects, isLoading } = useQuery({
-    queryKey: ['projects', user?.id],
-    queryFn: async () => {
+  const { data: projects, isLoading } = useMockQuery(
+    ['projects', user?.id],
+    async () => {
       if (!user) return [];
 
-      const { data, error } = await supabase
+      const { data, error } = await mockSupabase
         .from('projects')
-        .select(`
-          *,
-          manager:profiles!projects_manager_id_fkey(first_name, last_name),
-          creator:profiles!projects_created_by_fkey(first_name, last_name),
-          assignments:project_assignments(
-            id,
-            user_id,
-            role,
-            profiles!project_assignments_user_id_fkey(first_name, last_name)
-          )
-        `)
-        .order('created_at', { ascending: false });
+        .select('*')
+        .order('created_at', { ascending: false })
+        .execute();
 
       if (error) throw error;
       return data || [];
     },
-    enabled: !!user,
-  });
+    !!user
+  );
 
   const canManageProjects = user?.role === 'founder' || user?.role === 'cofounder' || user?.role === 'manager';
   const canViewProjects = user?.role === 'founder';

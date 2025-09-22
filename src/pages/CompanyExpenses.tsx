@@ -3,15 +3,28 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, DollarSign, TrendingUp, TrendingDown, Calendar } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useMockAuth } from '@/hooks/useMockAuth';
 import { ExpensesList } from '@/components/Expenses/ExpensesList';
 import { AddExpenseDialog } from '@/components/Expenses/AddExpenseDialog';
 import { useExpensesData } from '@/hooks/useExpensesData';
 
 const CompanyExpenses = () => {
-  const { user } = useAuth();
+  const { user } = useMockAuth();
   const [showAddExpense, setShowAddExpense] = useState(false);
-  const { data: expensesStats, isLoading } = useExpensesData();
+  const { data: expensesStats, isLoading } = useMockQuery(
+    ['expenses-stats', user?.id],
+    async () => {
+      if (!user) return null;
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return {
+        totalMonthly: 75000,
+        fixedExpenses: 50000,
+        variableExpenses: 25000,
+        thisMonth: 75000,
+      };
+    },
+    !!user && (user.role === 'founder' || user.role === 'cofounder')
+  );
 
   // Check if user has access (founder or cofounder only)
   if (!user || (user.role !== 'founder' && user.role !== 'cofounder')) {

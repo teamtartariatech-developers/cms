@@ -5,14 +5,28 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Eye, Edit, DollarSign, Phone, Mail, Calendar } from 'lucide-react';
-import { useEmployees } from '@/hooks/useEmployeesData';
-import { useAuth } from '@/hooks/useAuth';
+import { useMockQuery } from '@/hooks/useMockData';
+import { mockSupabase } from '@/services/mockSupabase';
+import { useMockAuth } from '@/hooks/useMockAuth';
 import { EmployeeDetailsDialog } from './EmployeeDetailsDialog';
 import { EditSalaryDialog } from './EditSalaryDialog';
 
 export const EmployeeList = () => {
-  const { user } = useAuth();
-  const { data: employees, isLoading } = useEmployees();
+  const { user } = useMockAuth();
+  const { data: employees, isLoading } = useMockQuery(
+    ['employees'],
+    async () => {
+      const { data, error } = await mockSupabase
+        .from('employees')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .execute();
+      
+      if (error) throw error;
+      return data || [];
+    },
+    true
+  );
   const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
   const [editingSalary, setEditingSalary] = useState<any>(null);
 

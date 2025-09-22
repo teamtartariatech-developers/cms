@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Users, DollarSign, Clock, AlertCircle } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useMockAuth } from '@/hooks/useMockAuth';
 import { EmployeeList } from '@/components/Employees/EmployeeList';
 import AddEmployeeDialog from '@/components/Employees/AddEmployeeDialog';
 import { AttendanceTracker } from '@/components/Employees/AttendanceTracker';
@@ -12,10 +12,23 @@ import { useEmployeesData } from '@/hooks/useEmployeesData';
 import { useEmployeeActions } from '@/hooks/useEmployeeActions';
 
 const Employees = () => {
-  const { user } = useAuth();
+  const { user } = useMockAuth();
   const [showAddEmployee, setShowAddEmployee] = useState(false);
   const { deleteEmployee } = useEmployeeActions();
-  const { data: employeesStats, isLoading } = useEmployeesData();
+  const { data: employeesStats, isLoading } = useMockQuery(
+    ['employees-stats', user?.id],
+    async () => {
+      if (!user) return null;
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return {
+        totalEmployees: 15,
+        activeEmployees: 14,
+        monthlySalary: 1200000,
+        presentToday: 12,
+      };
+    },
+    !!user && (user.role === 'founder' || user.role === 'cofounder')
+  );
 
   // Check if user has management access
   const canAddEmployee = user?.role === 'manager' || user?.role === 'founder' || user?.role === 'hr';

@@ -3,12 +3,40 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { useEmployeeAttendanceStats } from '@/hooks/useEmployeesData';
+import { useMockQuery } from '@/hooks/useMockData';
 import { format } from 'date-fns';
 import { Clock, CheckCircle, XCircle } from 'lucide-react';
 
 export const AttendanceTracker = () => {
-  const { data: attendanceData, isLoading } = useEmployeeAttendanceStats();
+  const { data: attendanceData, isLoading } = useMockQuery(
+    ['employee-attendance-stats'],
+    async () => {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return [
+        {
+          id: '1',
+          employeeCode: 'EMP001',
+          name: 'John Doe',
+          email: 'founder@company.com',
+          attendance: { check_in_time: '2025-01-11T09:00:00Z', check_out_time: null },
+          isCheckedIn: true,
+          isPresent: true,
+          hoursWorked: 0,
+        },
+        {
+          id: '2',
+          employeeCode: 'EMP002',
+          name: 'Jane Smith',
+          email: 'jane@company.com',
+          attendance: { check_in_time: '2025-01-11T09:15:00Z', check_out_time: null },
+          isCheckedIn: true,
+          isPresent: true,
+          hoursWorked: 0,
+        },
+      ];
+    },
+    true
+  );
 
   if (isLoading) {
     return (

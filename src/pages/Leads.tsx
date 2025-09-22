@@ -7,6 +7,7 @@ import { useLeadsPermission } from "@/hooks/useLeadsAccess";
 
 export default function Leads() {
   const { canAccessLeads, isLoading: accessLoading } = useLeadsPermission();
+  
   if (accessLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -14,6 +15,7 @@ export default function Leads() {
       </div>
     );
   }
+  
   if (!canAccessLeads) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -24,6 +26,7 @@ export default function Leads() {
       </div>
     );
   }
+  
   const { leads, isLoading } = useLeadsData();
 
   const getLeadStats = () => {
