@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Calendar, Clock, User } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useMockAuth } from '@/hooks/useMockAuth';
 
 interface HourlyUpdate {
   hour: number;
@@ -32,7 +32,7 @@ interface TimesheetWithProfile {
 }
 
 const AllTimesheetsView = () => {
-  const { user } = useAuth();
+  const { user } = useMockAuth();
   const [selectedEmployee, setSelectedEmployee] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<string>('');

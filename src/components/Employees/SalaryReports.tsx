@@ -5,12 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useMockAuth } from '@/hooks/useMockAuth';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Download, Calculator } from 'lucide-react';
 
 export const SalaryReports = () => {
-  const { user } = useAuth();
+  const { user } = useMockAuth();
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
 
   const { data: salaryData, isLoading } = useQuery({

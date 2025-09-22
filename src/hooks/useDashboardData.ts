@@ -1,9 +1,9 @@
 
 import { useMockQuery } from '@/hooks/useMockData';
-import { useAuth } from '@/hooks/useAuth';
+import { useMockAuth } from '@/hooks/useMockAuth';
 
 export const useDashboardStats = () => {
-  const { user } = useAuth();
+  const { user } = useMockAuth();
 
   return useMockQuery(
     ['dashboard-stats', user?.id],

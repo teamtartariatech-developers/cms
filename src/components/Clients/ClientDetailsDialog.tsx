@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { Check, X, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useMockAuth } from '@/hooks/useMockAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -19,7 +19,7 @@ interface ClientDetailsDialogProps {
 }
 
 export const ClientDetailsDialog: React.FC<ClientDetailsDialogProps> = ({ client, open, onOpenChange }) => {
-  const { user } = useAuth();
+  const { user } = useMockAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 

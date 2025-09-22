@@ -1,10 +1,10 @@
 
 import { useMockQuery } from '@/hooks/useMockData';
 import { mockSupabase } from '@/services/mockSupabase';
-import { useAuth } from '@/hooks/useAuth';
+import { useMockAuth } from '@/hooks/useMockAuth';
 
 export const useEmployeesData = () => {
-  const { user } = useAuth();
+  const { user } = useMockAuth();
 
   return useMockQuery(
     ['employees-stats', user?.id],

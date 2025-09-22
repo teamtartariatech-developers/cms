@@ -1,12 +1,12 @@
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useMockAuth } from '@/hooks/useMockAuth';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 
 export const useHourlyReminder = () => {
-  const { user } = useAuth();
+  const { user } = useMockAuth(); ;
   const { preferences } = useUserPreferences();
   const { toast } = useToast();
   const [lastReminderTime, setLastReminderTime] = useState<number>(0);

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useMockAuth } from '@/hooks/useMockAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import TaskCard from './TaskCard';
@@ -25,7 +25,7 @@ interface TaskListProps {
 }
 
 const TaskList: React.FC<TaskListProps> = ({ onStartWorkOnTask }) => {
-  const { user } = useAuth();
+  const { user } = useMockAuth();
   const { toast } = useToast();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);

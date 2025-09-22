@@ -535,4 +535,3 @@ export const getUserByEmail = (email: string): User | undefined => {
   return mockUsers.find(user => user.email === email);
 };
 
-export { currentUser }

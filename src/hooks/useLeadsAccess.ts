@@ -1,4 +1,4 @@
-import { useAuth } from "@/hooks/useAuth";
+import { useMockAuth } from "@/hooks/useMockAuth";
 import { useMockQuery, useMockMutation } from "@/hooks/useMockData";
 import { mockSupabase } from "@/services/mockSupabase";
 
@@ -7,7 +7,7 @@ import { mockSupabase } from "@/services/mockSupabase";
 // - isFounder: current user is founder
 // - list and grant/revoke utilities for founders
 export const useLeadsPermission = () => {
-  const { user } = useAuth();
+  const { user } = useMockAuth();
   const isFounder = user?.role === "founder";
 
   const { data: accessRows, isLoading } = useMockQuery(

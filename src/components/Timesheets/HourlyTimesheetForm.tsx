@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useMockAuth } from '@/hooks/useMockAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,7 +17,7 @@ interface HourlyEntry {
 }
 
 const HourlyTimesheetForm = () => {
-  const { user } = useAuth();
+  const { user } = useMockAuth();
   const { toast } = useToast();
   const [entries, setEntries] = useState<HourlyEntry[]>([]);
   const [currentTime, setCurrentTime] = useState(new Date());

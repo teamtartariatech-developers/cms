@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useMockAuth } from '@/hooks/useMockAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -23,7 +23,7 @@ interface HourlyTask {
 }
 
 const HourlyTimesheetTable = () => {
-  const { user } = useAuth();
+  const { user } = useMockAuth();
   const { toast } = useToast();
   const [hourlyTasks, setHourlyTasks] = useState<HourlyTask[]>([]);
   const [isLoading, setIsLoading] = useState(true);
