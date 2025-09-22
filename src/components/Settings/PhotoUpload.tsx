@@ -2,13 +2,13 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { mockSupabase } from '@/services/mockSupabase';
+import { useMockAuth } from '@/hooks/useMockAuth';
 import { toast } from 'sonner';
 import { Camera } from 'lucide-react';
 
 const PhotoUpload = () => {
-  const { user } = useAuth();
+  const { user } = useMockAuth();
   const [uploading, setUploading] = useState(false);
 
   const uploadPhoto = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -24,7 +24,7 @@ const PhotoUpload = () => {
       const filePath = `${user?.id}/avatar.${fileExt}`;
 
       // Upload file to storage
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError } = await mockSupabase.storage
         .from('avatars')
         .upload(filePath, file, { upsert: true });
 
@@ -33,12 +33,12 @@ const PhotoUpload = () => {
       }
 
       // Get public URL
-      const { data } = supabase.storage
+      const { data } = mockSupabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
 
       // Update profile with new avatar URL
-      const { error: updateError } = await supabase
+      const { error: updateError } = await mockSupabase
         .from('profiles')
         .update({ avatar_url: data.publicUrl })
         .eq('id', user?.id);
@@ -48,9 +48,6 @@ const PhotoUpload = () => {
       }
 
       toast.success('Photo updated successfully!');
-      
-      // Refresh the page to show new photo
-      window.location.reload();
     } catch (error: any) {
       toast.error(error.message || 'Error uploading photo');
     } finally {

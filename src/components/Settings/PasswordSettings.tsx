@@ -5,11 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Shield, Key } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { mockSupabase } from '@/services/mockSupabase';
+import { toast } from 'sonner';
 
 const PasswordSettings = () => {
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [passwords, setPasswords] = useState({
     current: '',
@@ -30,35 +29,24 @@ const PasswordSettings = () => {
     }
 
     if (passwords.new.length < 6) {
-      toast({
-        title: "Error",
-        description: "Password must be at least 6 characters long.",
-        variant: "destructive",
-      });
+      toast.error("Password must be at least 6 characters long.");
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.updateUser({
+      const { error } = await mockSupabase.auth.updateUser({
         password: passwords.new
       });
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Password updated successfully.",
-      });
+      toast.success("Password updated successfully.");
 
       setPasswords({ current: '', new: '', confirm: '' });
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update password.",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to update password.");
     } finally {
       setIsLoading(false);
     }

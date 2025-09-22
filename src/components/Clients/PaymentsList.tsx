@@ -4,42 +4,42 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useMockQuery } from '@/hooks/useMockData';
+import { mockSupabase } from '@/services/mockSupabase';
+import { useMockAuth } from '@/hooks/useMockAuth';
 import { format } from 'date-fns';
 import { Check, X, Eye } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 export const PaymentsList = () => {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { user } = useMockAuth();
 
-  const { data: payments, isLoading } = useQuery({
-    queryKey: ['payments', user?.id],
-    queryFn: async () => {
+  const { data: payments, isLoading } = useMockQuery(
+    ['payments', user?.id],
+    async () => {
       if (!user) return [];
 
-      const { data, error } = await supabase
+      const { data, error } = await mockSupabase
         .from('client_payments')
-        .select(`
-          *,
-          clients!inner(name, email)
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(10)
+        .execute();
 
       if (error) throw error;
-      return data || [];
+      
+      // Add mock client data
+      return (data || []).map(payment => ({
+        ...payment,
+        clients: { name: 'Mock Client', email: 'client@example.com' }
+      }));
     },
-    enabled: !!user && (user.role === 'founder' || user.role === 'cofounder'),
-  });
+    !!user && (user.role === 'founder' || user.role === 'cofounder')
+  );
 
   const verifyPayment = async (paymentId: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await mockSupabase
         .from('client_payments')
         .update({
           payment_status: 'verified',
@@ -50,26 +50,17 @@ export const PaymentsList = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Payment verified successfully",
-      });
+      toast.success("Payment verified successfully");
 
-      queryClient.invalidateQueries({ queryKey: ['payments'] });
-      queryClient.invalidateQueries({ queryKey: ['clients'] });
     } catch (error) {
       console.error('Error verifying payment:', error);
-      toast({
-        title: "Error",
-        description: "Failed to verify payment",
-        variant: "destructive",
-      });
+      toast.error("Failed to verify payment");
     }
   };
 
   const rejectPayment = async (paymentId: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await mockSupabase
         .from('client_payments')
         .update({
           payment_status: 'rejected',
@@ -80,20 +71,11 @@ export const PaymentsList = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Payment rejected",
-      });
+      toast.success("Payment rejected");
 
-      queryClient.invalidateQueries({ queryKey: ['payments'] });
-      queryClient.invalidateQueries({ queryKey: ['clients'] });
     } catch (error) {
       console.error('Error rejecting payment:', error);
-      toast({
-        title: "Error",
-        description: "Failed to reject payment",
-        variant: "destructive",
-      });
+      toast.error("Failed to reject payment");
     }
   };
 

@@ -5,13 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Shield, Smartphone, Key } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
+import { mockSupabase } from '@/services/mockSupabase';
+import { useMockAuth } from '@/hooks/useMockAuth';
+import { toast } from 'sonner';
 
 const TwoFactorAuth = () => {
-  const { user } = useAuth();
-  const { toast } = useToast();
+  const { user } = useMockAuth();
   const [isEnabled, setIsEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [setupStep, setSetupStep] = useState<'disabled' | 'setup' | 'verify'>('disabled');
@@ -29,11 +28,12 @@ const TwoFactorAuth = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await mockSupabase
         .from('two_factor_auth')
         .select('enabled')
         .eq('user_id', user.id)
-        .maybeSingle();
+        .maybeSingle()
+        .execute();
 
       if (error && error.code !== 'PGRST116') throw error;
 
@@ -84,7 +84,7 @@ const TwoFactorAuth = () => {
         throw new Error('Invalid verification code');
       }
 
-      const { error } = await supabase
+      const { error } = await mockSupabase
         .from('two_factor_auth')
         .upsert({
           user_id: user.id,
@@ -97,16 +97,9 @@ const TwoFactorAuth = () => {
 
       setIsEnabled(true);
       setSetupStep('disabled');
-      toast({
-        title: "Success",
-        description: "Two-factor authentication enabled successfully.",
-      });
+      toast.success("Two-factor authentication enabled successfully.");
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to enable 2FA.",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to enable 2FA.");
     } finally {
       setIsLoading(false);
     }
@@ -118,7 +111,7 @@ const TwoFactorAuth = () => {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase
+      const { error } = await mockSupabase
         .from('two_factor_auth')
         .update({ enabled: false })
         .eq('user_id', user.id);
@@ -126,16 +119,9 @@ const TwoFactorAuth = () => {
       if (error) throw error;
 
       setIsEnabled(false);
-      toast({
-        title: "Success",
-        description: "Two-factor authentication disabled.",
-      });
+      toast.success("Two-factor authentication disabled.");
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to disable 2FA.",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to disable 2FA.");
     } finally {
       setIsLoading(false);
     }

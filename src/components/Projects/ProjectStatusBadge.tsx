@@ -2,10 +2,9 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supabase } from '@/integrations/supabase/client';
+import { mockSupabase } from '@/services/mockSupabase';
 import { toast } from 'sonner';
-import { useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@/hooks/useAuth';
+import { useMockAuth } from '@/hooks/useMockAuth';
 
 interface ProjectStatusBadgeProps {
   project: any;
@@ -13,8 +12,7 @@ interface ProjectStatusBadgeProps {
 }
 
 export const ProjectStatusBadge = ({ project, canEdit = false }: ProjectStatusBadgeProps) => {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const { user } = useMockAuth();
 
   const statusColors = {
     planning: 'bg-yellow-100 text-yellow-800',
@@ -25,7 +23,7 @@ export const ProjectStatusBadge = ({ project, canEdit = false }: ProjectStatusBa
   };
 
   const handleStatusChange = async (newStatus: 'planning' | 'active' | 'on_hold' | 'completed' | 'cancelled') => {
-    const { error } = await supabase
+    const { error } = await mockSupabase
       .from('projects')
       .update({ status: newStatus })
       .eq('id', project.id);
@@ -36,7 +34,6 @@ export const ProjectStatusBadge = ({ project, canEdit = false }: ProjectStatusBa
     }
 
     toast.success('Project status updated successfully');
-    queryClient.invalidateQueries({ queryKey: ['projects'] });
   };
 
   const canEditStatus = canEdit && user && (user.role === 'founder' || user.role === 'cofounder' || user.role === 'manager');

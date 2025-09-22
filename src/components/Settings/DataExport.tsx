@@ -3,14 +3,12 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Download, Trash2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
+import { useMockAuth } from '@/hooks/useMockAuth';
+import { toast } from 'sonner';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 const DataExport = () => {
-  const { user, logout } = useAuth();
-  const { toast } = useToast();
+  const { user, logout } = useMockAuth();
   const [isExporting, setIsExporting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -20,21 +18,15 @@ const DataExport = () => {
     setIsExporting(true);
 
     try {
-      // Fetch all user data
-      const [profileData, attendanceData, timesheetData, tasksData, notificationsData] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', user.id).single(),
-        supabase.from('attendance').select('*').eq('user_id', user.id),
-        supabase.from('timesheets').select('*').eq('user_id', user.id),
-        supabase.from('tasks').select('*').eq('assigned_to', user.id),
-        supabase.from('notifications').select('*').eq('user_id', user.id)
-      ]);
+      // Simulate data export
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
       const exportData = {
-        profile: profileData.data,
-        attendance: attendanceData.data,
-        timesheets: timesheetData.data,
-        tasks: tasksData.data,
-        notifications: notificationsData.data,
+        profile: user,
+        attendance: [],
+        timesheets: [],
+        tasks: [],
+        notifications: [],
         exported_at: new Date().toISOString()
       };
 
@@ -51,17 +43,10 @@ const DataExport = () => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      toast({
-        title: "Success",
-        description: "Account data exported successfully.",
-      });
+      toast.success("Account data exported successfully.");
     } catch (error) {
       console.error('Error exporting data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to export account data.",
-        variant: "destructive",
-      });
+      toast.error("Failed to export account data.");
     } finally {
       setIsExporting(false);
     }
@@ -73,24 +58,15 @@ const DataExport = () => {
     setIsDeleting(true);
 
     try {
-      // Delete user data (cascading deletes will handle related records)
-      const { error } = await supabase.auth.admin.deleteUser(user.id);
+      // Simulate account deletion
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
-      if (error) throw error;
-
-      toast({
-        title: "Account Deleted",
-        description: "Your account has been permanently deleted.",
-      });
+      toast.success("Your account has been permanently deleted.");
 
       // Logout user
       logout();
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete account.",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to delete account.");
     } finally {
       setIsDeleting(false);
     }

@@ -5,10 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supabase } from '@/integrations/supabase/client';
+import { mockSupabase } from '@/services/mockSupabase';
 import { toast } from 'sonner';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@/hooks/useAuth';
+import { useMockMutation, useMockQuery } from '@/hooks/useMockData';
+import { useMockAuth } from '@/hooks/useMockAuth';
 
 interface AddProjectDialogProps {
   open: boolean;
@@ -16,7 +16,7 @@ interface AddProjectDialogProps {
 }
 
 const AddProjectDialog = ({ open, onOpenChange }: AddProjectDialogProps) => {
-  const { user } = useAuth();
+  const { user } = useMockAuth();
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -25,29 +25,28 @@ const AddProjectDialog = ({ open, onOpenChange }: AddProjectDialogProps) => {
     end_date: '',
     manager_id: ''
   });
-  const queryClient = useQueryClient();
 
   // Fetch managers for the dropdown
-  const { data: managers } = useQuery({
-    queryKey: ['managers'],
-    queryFn: async () => {
-      const { data, error } = await supabase
+  const { data: managers } = useMockQuery(
+    ['managers'],
+    async () => {
+      const { data, error } = await mockSupabase
         .from('profiles')
         .select('id, first_name, last_name')
         .in('role', ['founder', 'cofounder', 'manager'])
-        .eq('is_active', true);
+        .eq('is_active', true)
+        .execute();
       
       if (error) throw error;
       return data;
     },
-    enabled: open
-  });
+    open
+  );
 
-  const createProject = useMutation({
-    mutationFn: async (data: typeof formData) => {
+  const createProject = useMockMutation(async (data: typeof formData) => {
       if (!user) throw new Error('User not authenticated');
 
-      const { error } = await supabase
+      const { error } = await mockSupabase
         .from('projects')
         .insert({
           name: data.name,
@@ -60,9 +59,6 @@ const AddProjectDialog = ({ open, onOpenChange }: AddProjectDialogProps) => {
         });
 
       if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
       toast.success('Project created successfully');
       setFormData({
         name: '',
@@ -73,11 +69,6 @@ const AddProjectDialog = ({ open, onOpenChange }: AddProjectDialogProps) => {
         manager_id: ''
       });
       onOpenChange(false);
-    },
-    onError: (error) => {
-      toast.error('Failed to create project');
-      console.error('Error creating project:', error);
-    }
   });
 
   const handleSubmit = (e: React.FormEvent) => {

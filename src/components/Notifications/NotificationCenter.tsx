@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useMockQuery, useMockMutation } from '@/hooks/useMockData';
+import { mockSupabase } from '@/services/mockSupabase';
+import { useMockAuth } from '@/hooks/useMockAuth';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,52 +11,42 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 
 const NotificationCenter = () => {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const { user } = useMockAuth();
 
-  const { data: notifications } = useQuery({
-    queryKey: ['notifications', user?.id],
-    queryFn: async () => {
+  const { data: notifications } = useMockQuery(
+    ['notifications', user?.id],
+    async () => {
       if (!user?.id) return [];
-      const { data, error } = await supabase
+      const { data, error } = await mockSupabase
         .from('notifications')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .execute();
       
       if (error) throw error;
       return data;
     },
-    enabled: !!user?.id,
-  });
+    !!user?.id
+  );
 
-  const markAsRead = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
+  const markAsRead = useMockMutation(async (id: string) => {
+      const { error } = await mockSupabase
         .from('notifications')
         .update({ is_read: true })
         .eq('id', id);
       
       if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-    }
   });
 
-  const deleteNotification = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
+  const deleteNotification = useMockMutation(async (id: string) => {
+      const { error } = await mockSupabase
         .from('notifications')
         .delete()
         .eq('id', id);
       
       if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
       toast.success('Notification deleted');
-    }
   });
 
   const unreadCount = notifications?.filter(n => !n.is_read).length || 0;
